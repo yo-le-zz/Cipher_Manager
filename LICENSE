@@ -1,21 +1,58 @@
-MIT License
+Cipher Manager License
+Version 1.0
 
-Copyright (c) 2026 yo_le_zz
+Copyright (c) 2026 yo-le-zz
+All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This software, named "cipher_manager", is provided for PERSONAL AND FUNCTIONAL USE ONLY.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+--------------------------------------------------
+1. PERMITTED USE
+--------------------------------------------------
+You are allowed to:
+- Use the software as an end-user application.
+- Run the software for personal or internal use.
+- Use the software strictly as a tool or executable.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+--------------------------------------------------
+2. PROHIBITED USE
+--------------------------------------------------
+You are NOT allowed to:
+- Copy, modify, decompile, reverse-engineer, or extract any part of the source code.
+- Redistribute the software or any modified version of it.
+- Sell, rent, sublicense, or monetize the software in any form.
+- Use the software or its code in another project (commercial or non-commercial).
+- Claim authorship or ownership of the software or its components.
+- Use the software for commercial purposes or financial gain.
+
+--------------------------------------------------
+3. SOURCE CODE
+--------------------------------------------------
+Access to the source code does NOT grant any rights to reuse,
+modify, or redistribute it.
+
+The source code remains the exclusive property of the author.
+
+--------------------------------------------------
+4. TERMINATION
+--------------------------------------------------
+Any violation of this license automatically terminates your
+right to use the software.
+
+--------------------------------------------------
+5. DISCLAIMER
+--------------------------------------------------
+This software is provided "AS IS", without warranty of any kind.
+The author shall not be held liable for any damage, data loss,
+or security issues resulting from the use of this software.
+
+--------------------------------------------------
+6. GOVERNING LAW
+--------------------------------------------------
+This license is governed by the laws applicable in the author's
+country of residence.
+
+--------------------------------------------------
+Author:
+GitHub: https://github.com/yo-le-zz
+Project: cipher_manager
