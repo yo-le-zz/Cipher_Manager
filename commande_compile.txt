@@ -1,1 +1,1 @@
-pyinstaller --onefile --icon="C:\paths\to\icon\cipher_manager\V1.0.0\assets\icon.ico" --distpath "C:\path\to\dist\cipher_manager\V1.0.0\dist" --name="Windows_V1.0.0cipher_manager" --clean main.py
+pyinstaller --onefile --icon="C:\paths\to\icon\cipher_manager\V1.0.1\assets\icon.ico" --distpath "C:\path\to\dist\cipher_manager\V1.0.1\dist" --name="Windows_V1.0.0cipher_manager" --clean main.py
