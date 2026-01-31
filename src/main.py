@@ -61,7 +61,7 @@ def check_config():
     else:
         return False
 
-version = "V1.0.1"
+version = "V1.0.2"
 
 def main():
     # Vérification des mises à jour au démarrage
@@ -141,4 +141,5 @@ signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 signal.signal(signal.SIGTERM, signal_handler)  # Kill
 
 if __name__ == "__main__":
+
     main()
