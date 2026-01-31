@@ -23,7 +23,7 @@ from pathlib import Path
 # ======================================
 # MAGIC NUMBERS
 # ======================================
-DEBUG = False
+DEBUG = True
 class LogLevel:
     INFO = "1"
     SUCCESS = "2"

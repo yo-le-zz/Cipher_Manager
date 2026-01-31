@@ -84,12 +84,18 @@ def download_and_install_update():
     try:
         printl("📥 Téléchargement de l'outil de mise à jour...", "1")
         
-        # Télécharger update.exe
-        update_url = "https://github.com/yo-le-zz/GenericUpdater/releases/latest/download/update.exe"
+        # Télécharger update.exe à côté de l'exécutable actuel
+        if getattr(sys, 'frozen', False):
+            # Exécutable PyInstaller
+            app_dir = os.path.dirname(sys.executable)
+        else:
+            # Script Python
+            app_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # Créer un fichier temporaire pour update.exe
-        with tempfile.NamedTemporaryFile(suffix='.exe', delete=False) as temp_file:
-            update_exe_path = temp_file.name
+        update_exe_path = os.path.join(app_dir, "update.exe")
+        
+        # URL de téléchargement
+        update_url = "https://github.com/yo-le-zz/GenericUpdater/releases/latest/download/update.exe"
         
         download_file(update_url, update_exe_path)
         
@@ -110,7 +116,7 @@ def download_and_install_update():
             update_exe_path,
             "--update",
             executable_name,
-            f"yo-le-zz/{executable_name}"
+            "yo-le-zz/Cipher_Manager"
         ]
         
         printl("🚀 Lancement de la mise à jour automatique...", "2")

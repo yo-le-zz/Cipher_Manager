@@ -61,7 +61,7 @@ def check_config():
     else:
         return False
 
-version = "V1.0.2"
+version = "V1.0.1"
 
 def main():
     # Vérification des mises à jour au démarrage
@@ -69,8 +69,7 @@ def main():
     
     first_launch = check_config()
     printl(f"Chemin de recherche : {CONFIG_PATH}", "1")
-
-    print("test")
+    
     if first_launch:
         printl("Configuration trouvée.", "1")
         printc("=== cipher_manager ===", c['c'])
@@ -142,5 +141,4 @@ signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 signal.signal(signal.SIGTERM, signal_handler)  # Kill
 
 if __name__ == "__main__":
-
     main()
