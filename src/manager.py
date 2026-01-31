@@ -532,11 +532,39 @@ def move_element_interactive(master_password: str, config_data: dict, current_fo
 
 def get_folder_children(tree: dict, folder_id: str, master_password: str) -> list:
     """
-    Récupère les enfants d'un dossier avec leurs noms déchiffrés
+    Récupère les enfants d'un dossier déchiffrés
+    Gère aussi le dossier virtuel __ROOT__
+    
+    Args:
+        tree: Arborescence complète
+        folder_id: ID du dossier (ou "__ROOT__" pour le niveau racine)
+        master_password: Mot de passe maître
     
     Returns:
-        list: Liste de tuples (id, name, type)
+        list: Liste de dicts avec id, name, type, created_at
     """
+    # ===== CAS SPÉCIAL : Dossier virtuel __ROOT__ =====
+    if folder_id == "__ROOT__":
+        # Retourner tous les dossiers sans parent
+        root_folders = []
+        for elem_id, elem_data in tree.items():
+            if elem_data.get("type") == "folder" and elem_data.get("parent") is None:
+                # Déchiffrer le nom
+                salt = bytes.fromhex(elem_data["salt"])
+                element_key, _ = derive_element_key(master_password, elem_id, salt=salt)
+                decrypted_name = decrypt_name(elem_data["name_encrypted"], element_key)
+                
+                root_folders.append({
+                    "id": elem_id,
+                    "name": decrypted_name,
+                    "type": "folder",
+                    "created_at": elem_data.get("created_at", "N/A")
+                })
+        
+        # Trier par nom
+        return sorted(root_folders, key=lambda x: x["name"])
+    
+    # ===== CAS NORMAL : Dossier existant =====
     if folder_id not in tree:
         return []
     
@@ -564,94 +592,127 @@ def get_folder_children(tree: dict, folder_id: str, master_password: str) -> lis
     return children_info
 
 
-def navigate_interactive(master_password: str, config_data: dict, current_folder_id: str = None) -> str:
+def navigate_interactive(master_password: str, config_data: dict, current_folder_id: str) -> str:
     """
     Navigation interactive dans l'arborescence
+    Supporte le dossier virtuel __ROOT__
     
     Args:
         master_password: Mot de passe maître
         config_data: Configuration déchiffrée
-        current_folder_id: ID du dossier actuel (None = racine)
+        current_folder_id: ID du dossier actuel (ou "__ROOT__")
     
     Returns:
         str: ID du nouveau dossier actuel
     """
-    from rich.tree import Tree
     from rich.table import Table
     
     tree = config_data.get("tree", {})
     
-    # Si pas de current_folder, trouver la racine
-    if current_folder_id is None:
-        for folder_id, item in tree.items():
-            if item.get("type") == "folder" and item.get("parent") is None:
-                current_folder_id = folder_id
-                break
+    # ===== AFFICHAGE DU TITRE =====
+    # CAS SPÉCIAL : Niveau racine virtuel
+    if current_folder_id == "__ROOT__":
+        console.print("\n[cyan]═══ 🌍 Racine du système ═══[/cyan]\n")
+    else:
+        # Dossier normal
+        current_folder = tree.get(current_folder_id)
+        if not current_folder:
+            printc("❌ Dossier introuvable.", c['r'])
+            printc("Redemarrer le programme.", c['r'])
+            return current_folder_id
+        
+        # Déchiffrer et afficher le nom
+        salt = bytes.fromhex(current_folder["salt"])
+        element_key, _ = derive_element_key(master_password, current_folder_id, salt=salt)
+        folder_name = decrypt_name(current_folder["name_encrypted"], element_key)
+        console.print(f"\n[cyan]═══ 📂 {folder_name} ═══[/cyan]\n")
     
-    if current_folder_id not in tree:
-        printc("❌ Dossier actuel introuvable.", c['r'])
-        return current_folder_id
-    
-    # Déchiffrer le nom du dossier actuel
-    current_folder = tree[current_folder_id]
-    salt = bytes.fromhex(current_folder["salt"])
-    element_key, _ = derive_element_key(master_password, current_folder_id, salt=salt)
-    current_name = decrypt_name(current_folder["name_encrypted"], element_key)
-    
-    console.print(f"\n[cyan]═══ 📂 {current_name} ═══[/cyan]\n")
-    
-    # Récupérer les enfants
+    # ===== RÉCUPÉRER LES ENFANTS =====
     children = get_folder_children(tree, current_folder_id, master_password)
     
     if not children:
-        printc("📭 Ce dossier est vide.", c['y'])
+        console.print("[dim]📭 Ce dossier est vide.[/dim]\n")
     else:
-        # Afficher sous forme de tableau
+        # Afficher le tableau des enfants
         table = Table(show_header=True, header_style="bold cyan")
         table.add_column("#", style="dim", width=4)
-        table.add_column("Type", width=8)
+        table.add_column("Type", width=10)
         table.add_column("Nom", style="white")
-        table.add_column("Créé le", style="dim")
+        table.add_column("Créé le", style="dim", width=12)
         
         for i, child in enumerate(children, 1):
-            icon = "📁" if child["type"] == "folder" else "📄"
+            # Icône selon le type
+            if child["type"] == "folder":
+                icon = "📁"
+                type_label = "folder"
+            else:
+                icon = "📄"
+                type_label = "file"
+            
+            # Date formatée
+            created_date = child.get("created_at", "N/A")
+            if created_date != "N/A":
+                try:
+                    created_date = created_date.split("T")[0]
+                except:
+                    pass
+            
             table.add_row(
                 str(i),
-                f"{icon} {child['type']}",
+                f"{icon} {type_label}",
                 child["name"],
-                child["created_at"][:10] if len(child["created_at"]) >= 10 else child["created_at"]
+                created_date
             )
         
         console.print(table)
     
-    # Options de navigation
+    # ===== OPTIONS DE NAVIGATION =====
     console.print("\n[dim]Options:[/dim]")
     console.print("[cyan]  [numéro][/cyan] - Entrer dans le dossier")
-    console.print("[cyan]  ..[/cyan] - Dossier parent")
-    console.print("[cyan]  m[/cyan] - Déplacer un dossier")
+    
+    # Afficher ".." seulement si on n'est pas au niveau racine virtuel
+    if current_folder_id != "__ROOT__":
+        console.print("[cyan]  ..[/cyan] - Dossier parent")
+    
+    console.print("[cyan]  m[/cyan] - Déplacer un élément")
     console.print("[cyan]  q[/cyan] - Quitter la navigation")
     
+    # ===== TRAITEMENT DU CHOIX =====
     choice = inputc("\n[cyan]Votre choix[/cyan] : ", c['c']).strip().lower()
     
     if choice == "q":
+        # Quitter la navigation
         return current_folder_id
+    
     elif choice == "m":
-        # Déplacer un dossier
+        # Déplacer un élément
         if move_element_interactive(master_password, config_data, current_folder_id):
             # Recharger la config
             from setup import load_config
             updated_config = load_config(master_password)
-            # Mettre à jour la config dans l'appelant (pas élégant mais fonctionnel)
             config_data.update(updated_config)
         return current_folder_id
+    
     elif choice == "..":
         # Remonter au parent
-        parent_id = current_folder.get("parent")
-        if parent_id:
-            return parent_id
-        else:
-            printc("❌ Déjà à la racine.", c['r'])
+        if current_folder_id == "__ROOT__":
+            printc("❌ Déjà au niveau racine.", c['r'])
             return current_folder_id
+        
+        # Vérifier si le dossier a un parent
+        current_folder = tree.get(current_folder_id)
+        if not current_folder:
+            return current_folder_id
+        
+        parent_id = current_folder.get("parent")
+        
+        if parent_id is None:
+            # Pas de parent → retourner au niveau virtuel
+            return "__ROOT__"
+        else:
+            # Parent normal → y aller
+            return parent_id
+    
     elif choice.isdigit():
         # Entrer dans un dossier
         idx = int(choice) - 1
@@ -665,6 +726,7 @@ def navigate_interactive(master_password: str, config_data: dict, current_folder
         else:
             printc("❌ Numéro invalide.", c['r'])
             return current_folder_id
+    
     else:
         printc("❌ Choix invalide.", c['r'])
         return current_folder_id
@@ -673,6 +735,112 @@ def navigate_interactive(master_password: str, config_data: dict, current_folder
 # ====================================
 # SUPPRESSION TOTALE
 # ====================================
+
+def delete_everything_clean(master_password: str, config_data: dict):
+    """
+    Supprime toute l'arborescence et les fichiers physiques SANS recréer le dossier Root
+    Pour avoir un environnement propre avant importation
+    
+    Args:
+        master_password: Mot de passe maître
+        config_data: Configuration déchiffrée
+    """
+    import shutil
+    from others.cache import cache_manager
+    
+    console.print("\n[red bold]⚠️  SUPPRESSION TOTALE (CLEAN) ⚠️[/red bold]\n")
+    
+    data_path = Path(config_data.get("data_path", "."))
+    tree = config_data.get("tree", {})
+    
+    if not tree:
+        printc("✅ Aucune donnée à supprimer.", c['g'])
+        # Supprimer le cache quand même
+        cache_manager.delete()
+        return
+    
+    console.print(f"[yellow]📁 Chemin des données : {data_path}[/yellow]")
+    console.print(f"[yellow]📊 Nombre d'éléments : {len(tree)}[/yellow]\n")
+    
+    confirm = inputc("[red]Tapez 'SUPPRIMER TOUT' pour confirmer[/red] : ", c['r'])
+    
+    if confirm != "SUPPRIMER TOUT":
+        printc("❌ Suppression annulée.", c['g'])
+        return
+    
+    try:
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            console=console
+        ) as progress:
+            task = progress.add_task("Suppression en cours...", total=100)
+            
+            # 1. Supprimer tous les dossiers physiques
+            progress.update(task, advance=20, description="Suppression des dossiers physiques...")
+            
+            # Vérifier si le cache existe (noms déchiffrés)
+            cache_mappings = cache_manager.get_all()
+            
+            for item_id, item in tree.items():
+                item_type = item.get("type", "file")
+                
+                # Essayer avec le nom du cache (déchiffré) en premier
+                if cache_mappings and item_id in cache_mappings:
+                    item_path = Path(cache_mappings[item_id]["physical_path"])
+                else:
+                    # Sinon utiliser le chemin chiffré selon le type
+                    if item_type == "folder":
+                        item_path = data_path / item_id
+                    else:  # fichier
+                        item_path = data_path / f"{item_id}.dat"
+                
+                if item_path.exists():
+                    if item_path.is_dir():
+                        shutil.rmtree(item_path)
+                        printl(f"Supprimé dossier: {item_path.name}", "1")
+                    else:
+                        item_path.unlink()
+                        printl(f"Supprimé fichier: {item_path.name}", "1")
+                else:
+                    # Fallback : chercher avec le pattern ID* (pour les fichiers déchiffrés)
+                    if item_type == "file":
+                        for f in data_path.glob(f"{item_id[:8]}*"):
+                            if f.is_file():
+                                f.unlink()
+                                printl(f"Supprimé fichier (fallback): {f.name}", "1")
+                                break
+                    else:
+                        for d in data_path.glob(f"{item_id[:8]}*"):
+                            if d.is_dir():
+                                shutil.rmtree(d)
+                                printl(f"Supprimé dossier (fallback): {d.name}", "1")
+                                break
+            
+            printl("Tous les dossiers physiques supprimés.", "2")
+            
+            # 2. Supprimer le cache
+            progress.update(task, advance=20, description="Suppression du cache...")
+            cache_manager.delete()
+            printl("Cache supprimé.", "2")
+            
+            # 3. Vider l'arborescence dans la config
+            progress.update(task, advance=30, description="Nettoyage de la configuration...")
+            config_data["tree"] = {}
+            save_tree_to_config({}, master_password, config_data)
+            
+            printl("Arborescence vidée de la config.", "2")
+            
+            progress.update(task, advance=30, description="✅ Terminé !")
+        
+        printc("\n✅ Toutes les données ont été supprimées avec succès.", c['g'])
+        printc("📁 Environnement propre prêt pour l'importation.", c['c'])
+        
+    except Exception as e:
+        printc(f"\n❌ Erreur lors de la suppression : {e}", c['r'])
+        printl(f"Erreur delete_everything_clean: {e}", "4")
+
 
 def delete_everything(master_password: str, config_data: dict):
     """

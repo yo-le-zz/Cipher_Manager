@@ -14,9 +14,11 @@ from manager import (
     init_tree_if_needed,
     create_folder_interactive,
     navigate_interactive,
-    delete_everything
+    delete_everything,
+    delete_everything_clean
 )
 from others.cache import cache_manager
+from export_import import export_interactive, import_interactive
 
 console = Console()
 
@@ -76,15 +78,7 @@ def menu(config: dict, master_password: str):
     
     # Trouver le dossier racine
     tree = config.get("tree", {})
-    current_folder_id = None
-    for folder_id, item in tree.items():
-        if item.get("type") == "folder" and item.get("parent") is None:
-            current_folder_id = folder_id
-            break
-    
-    if not current_folder_id:
-        printc("❌ Impossible de trouver le dossier racine.", c['r'])
-        sys.exit(1)
+    current_folder_id = "__ROOT__"
     
     while True:
         console.print()  # Ligne vide
@@ -150,10 +144,18 @@ def menu(config: dict, master_password: str):
             printc("💡 Le cache est conservé pour accélérer le prochain déchiffrement.", c['y'])
         
         elif choice == "8":
-            printc("\n🔜 Exportation - En développement", c['y'])
+            # Exportation des données
+            export_interactive(master_password, config)
         
         elif choice == "9":
-            printc("\n🔜 Importation - En développement", c['y'])
+            # Importation des données
+            delete_everything_clean(master_password, config)
+            success = import_interactive(master_password)
+            if success:
+                from setup import load_config
+                config = load_config(master_password)
+                # CHANGEMENT ICI : toujours partir du virtuel
+                current_folder_id = "__ROOT__"
         
         elif choice == "10":
             # Suppression totale
@@ -163,10 +165,10 @@ def menu(config: dict, master_password: str):
             config = load_config(master_password)
             # Réinitialiser le dossier actuel
             tree = config.get("tree", {})
-            for folder_id, item in tree.items():
-                if item.get("type") == "folder" and item.get("parent") is None:
-                    current_folder_id = folder_id
-                    break
+            current_folder_id = None
+            printc("📁 Environnement vide. Utilisez l'importation pour restaurer des données.", c['y'])
+            # Ajouter un message pour informer l'utilisateur de la suppression totale
+            printc("⚠️  Toutes les données ont été supprimées. Veuillez importer des données pour continuer.", c['y'])
                 
         elif choice == "0":
             printc("\n👋 Fermeture sécurisée en cours...", c['c'])
