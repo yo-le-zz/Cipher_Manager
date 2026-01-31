@@ -4,6 +4,7 @@
 from others.utils import c, inputc, printc, printl, get_app_path, get_path
 from setup import setup, load_config
 from others.cache import cache_manager
+from updater import auto_update
 
 # librairies headers
 import signal
@@ -60,9 +61,12 @@ def check_config():
     else:
         return False
 
-version = "V1.0.0"
+version = "V1.0.1"
 
 def main():
+    # Vérification des mises à jour au démarrage
+    auto_update()
+    
     first_launch = check_config()
     printl(f"Chemin de recherche : {CONFIG_PATH}", "1")
     
