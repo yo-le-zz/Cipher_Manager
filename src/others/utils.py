@@ -23,7 +23,7 @@ from pathlib import Path
 # ======================================
 # MAGIC NUMBERS
 # ======================================
-DEBUG = True
+DEBUG = False
 class LogLevel:
     INFO = "1"
     SUCCESS = "2"
@@ -146,3 +146,4 @@ def printl(msg: str, level: str = LogLevel.INFO):
             printc(full_msg, style)
         else:
             print(full_msg)
+
