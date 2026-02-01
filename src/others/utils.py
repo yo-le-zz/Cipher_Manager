@@ -48,9 +48,17 @@ def get_app_path() -> Path:
     
 def get_path(relative_path: str) -> Path:
     """
-    Retourne un chemin absolu relatif à l'endroit où main.py est lancé.
+    Retourne un chemin absolu relatif à l'endroit où l'exécutable se trouve.
+    Fonctionne aussi bien en développement qu'avec PyInstaller.
     """
-    return Path.cwd() / relative_path
+    if getattr(sys, "frozen", False):
+        # PyInstaller : le répertoire de l'exécutable
+        base_path = Path(sys.executable).parent
+    else:
+        # Développement : le répertoire src/
+        base_path = Path(__file__).resolve().parent
+    
+    return base_path / relative_path
 
 # ======================
 # LETTRES RAPIDES
@@ -146,4 +154,3 @@ def printl(msg: str, level: str = LogLevel.INFO):
             printc(full_msg, style)
         else:
             print(full_msg)
-

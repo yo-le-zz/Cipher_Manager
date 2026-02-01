@@ -141,5 +141,4 @@ signal.signal(signal.SIGINT, signal_handler)  # Ctrl+C
 signal.signal(signal.SIGTERM, signal_handler)  # Kill
 
 if __name__ == "__main__":
-
     main()
